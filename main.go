@@ -1,41 +1,16 @@
 package main
 
 import (
-	"fmt"
-	"os"
-	"os/signal"
+	"runtime"
 
-	"gopkg.in/robfig/cron.v2"
+	"github.com/hiteshjoshi/pandat/api"
+	"github.com/hiteshjoshi/pandat/clock"
 )
 
 func main() {
-	c := cron.New()
-	c.AddFunc("@every 2s", func() { fmt.Println("Every hour on the half hour") })
+	runtime.LockOSThread()
 
-	c.Start()
+	c := clock.New()
+	api.Start(8000, c)
 
-	s := make(chan os.Signal, 2)
-
-	signal.Notify(s, os.Interrupt)
-	go func() {
-		for range s {
-			//stop cron server
-			fmt.Println("\nStopping server!")
-			c.Stop()
-
-			os.Exit(0)
-		}
-	}()
-
-	keep()
-}
-
-func keep() {
-
-	done := make(chan bool)
-	go (func() {
-		for {
-		}
-	})()
-	<-done
 }
