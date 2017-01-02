@@ -10,7 +10,7 @@ import (
 	validator "gopkg.in/validator.v2"
 )
 
-func Start(PORT int, c *clock.Clock) *Engine {
+func Start(PORT string, c *clock.Clock) {
 
 	r := NewRouter()
 	//set cron
@@ -21,9 +21,7 @@ func Start(PORT int, c *clock.Clock) *Engine {
 
 	r.Post("/add", r.Add)
 
-	r.Run(":8000")
-
-	return r
+	r.Run(":" + PORT)
 }
 
 type Schedular struct {

@@ -73,7 +73,7 @@ func (d Job) Request(ch chan<- string) {
 }
 func (d Job) Run() {
 	ch := make(chan string)
-	defer d.Request(ch)
+	go d.Request(ch)
 
 }
 

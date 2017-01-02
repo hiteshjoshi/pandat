@@ -70,6 +70,8 @@ func (e *Engine) Run(port string) {
 		}
 	}()
 
+	fmt.Println("\nStarting API server!")
+
 	log.Fatal(e.Server.ListenAndServe())
 }
 
