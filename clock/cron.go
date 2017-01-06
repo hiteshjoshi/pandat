@@ -5,11 +5,13 @@ import (
 	"log"
 	"net"
 	"net/http"
-	"strconv"
 	"strings"
 	"time"
 
-	cron "gopkg.in/robfig/cron.v2"
+	"strconv"
+
+	cron "gopkg.in/hiteshjoshi/cron.v2"
+	"gopkg.in/redis.v5"
 )
 
 const (
@@ -18,17 +20,48 @@ const (
 	CONNECT_TIMEOUT = 5
 )
 
+type fn func() string
 type Clock struct {
-	Cron *cron.Cron
+	Cron  *cron.Cron
+	Boot  fn
+	Redis *redis.Client
 }
 
+func forever() {
+	for {
+	}
+}
 func New() *Clock {
 
+	client := redis.NewClient(&redis.Options{
+		Addr: "localhost:6379",
+	})
+	pong, err := client.Ping().Result()
+
+	fmt.Println("PING TO REDIS, GOT : ", pong, "and ERRORS : ", err)
+
 	c := cron.New()
+
+	e := client.Get("entries")
+	s, _ := e.Bytes()
+	id, _ := strconv.Atoi(string(s))
+	c.NextID = cron.EntryID(id)
+
 	clock := Clock{
-		Cron: c,
+		Cron:  c,
+		Redis: client,
 	}
-	c.Start()
+
+	//To make it run forever for slaves of clock
+	clock.Boot = func() string {
+		done := make(chan bool)
+		go forever()
+		<-done
+		return ""
+	}
+
+	c.Start() //start cron.v2
+
 	return &clock
 }
 
@@ -80,12 +113,34 @@ func (d Job) Run() {
 //Add : Add new job
 func (c *Clock) Add(interval string, url string) string {
 
-	job := Job{
+	id, _ := c.Cron.AddJob(interval, Job{
 		URL: url,
-	}
+	})
 
-	id, _ := c.Cron.AddJob(interval, job)
+	ID := fmt.Sprint(id)
 
-	return strconv.Itoa(int(id))
+	//save interval
+	c.Redis.HSet("id:"+ID, "interval", interval)
+
+	//save url
+	c.Redis.HSet("id:"+ID, "url", url)
+
+	c.Redis.Set("entries", ID, 0)
+
+	return ID
+
+}
+
+//Remove a job
+func (c *Clock) Remove(id string) error {
+
+	ID, _ := strconv.Atoi(id)
+
+	c.Cron.Remove(cron.EntryID(ID))
+
+	//remvove from redis
+	e := c.Redis.HDel("id:" + id)
+
+	return e.Err()
 
 }

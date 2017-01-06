@@ -1,77 +1,114 @@
 package api
 
 import (
-	"encoding/json"
-	"log"
+	"fmt"
 	"net/http"
+	"os"
+	"os/signal"
+	"time"
 
+	log "github.com/Sirupsen/logrus"
+	"github.com/gorilla/handlers"
+	"github.com/gorilla/mux"
+	"github.com/hiteshjoshi/manners"
+	"github.com/hiteshjoshi/negroni"
 	"github.com/hiteshjoshi/pandat/clock"
-
-	validator "gopkg.in/validator.v2"
 )
 
-func Start(PORT string, c *clock.Clock) {
+type Engine struct {
+	Router *mux.Router
 
-	r := NewRouter()
-	//set cron
+	Server *manners.GracefulServer
 
-	r.Clock = c
-
-	r.Post("/", r.Index)
-
-	r.Post("/add", r.Add)
-
-	r.Run(":" + PORT)
+	Clock *clock.Clock
 }
 
-type Schedular struct {
-	Name     string `json:"name,required" validate:"min=2,nonzero"`
-	URL      string `json:"url,required" validate:"min=2,nonzero"`
-	Interval string `json:"interval,required" validate:"min=2,nonzero"`
-}
+func NewEngine() *Engine {
 
-func (e *Engine) Add(w http.ResponseWriter, r *http.Request) {
-
-	schedule := Schedular{}
-	decoder := json.NewDecoder(r.Body)
-	err := decoder.Decode(&schedule)
-	defer r.Body.Close()
-	if err != nil {
-		panic(err)
+	e := Engine{
+		Router: mux.NewRouter().StrictSlash(true),
 	}
-	errs := validator.Validate(schedule)
 
-	if errs != nil {
-		resp := Response{
-			Message: "Validation error",
-			Data:    schedule,
-			Error:   true,
+	return &e
+}
+
+func (e *Engine) Stop() {
+	e.Server.Close()
+}
+func (e *Engine) Run(port string) {
+	//SetFormat
+	n := negroni.New()
+	logger := negroni.NewLogger()
+
+	logger.SetAppName("[pandat]")
+	logger.SetFormat("{{.AppName}} > {{.StartTime}} | {{.Status}} | \t {{.Duration}} | {{.Hostname}} | {{.Method}} {{.Path}} \n")
+
+	n.Use(logger)
+
+	n.UseHandler(e.Router)
+
+	h := handlers.CORS()(handlers.CompressHandler(handlers.RecoveryHandler()(n)))
+
+	e.Server = manners.NewWithServer(&http.Server{
+		Handler: h,
+		Addr:    port,
+		// Good practice: enforce timeouts for servers you create!
+		WriteTimeout: 15 * time.Second,
+		ReadTimeout:  15 * time.Second,
+	})
+
+	//Handling server Interrupt events
+	s := make(chan os.Signal, 2)
+	signal.Notify(s, os.Interrupt)
+	go func() {
+		for range s {
+			//stop cron server
+			fmt.Println("\n\n\nPlease wait....")
+			fmt.Println("\nStopping API server!")
+			e.Server.Close()
+			os.Exit(0)
 		}
-		resp.Send(http.StatusBadRequest, w)
-		return
-	}
+	}()
 
-	id := e.Clock.Add(schedule.Interval, schedule.URL)
-
-	resp := Response{
-		Message: "Event created.",
-		Data: map[string]string{
-			"id":        id,
-			"scheduled": schedule.Interval,
-		},
-		Error: false,
-	}
-	resp.Send(http.StatusOK, w)
+	fmt.Println("\nStarting API server on port" + port)
+	log.Fatal(e.Server.ListenAndServe())
 }
 
-func (e *Engine) Index(w http.ResponseWriter, r *http.Request) {
+func (e *Engine) Group(path string) *Engine {
 
-	log.Println(r.URL.Query())
+	ne := NewEngine()
+	ne.Clock = e.Clock
+	ne.Router = e.Router.PathPrefix(path).Subrouter()
+	ne.Server = e.Server
+	ne.Router.StrictSlash(true)
+	return ne
+}
+func (e *Engine) Method(m string, path string, c http.HandlerFunc) {
+	e.Router.
+		Methods(m).
+		Path(path).
+		Handler(c)
+}
+func (e *Engine) Get(path string, c http.HandlerFunc) {
 
-	resp := Response{
-		Message: "Yo bro, All good?",
+	e.Method("GET", path, c)
+}
 
-		Error: false,
-	}
-	resp.Send(http.StatusOK, w)
+func (e *Engine) Post(path string, c http.HandlerFunc) {
+
+	e.Method("POST", path, c)
+}
+
+func (e *Engine) Put(path string, c http.HandlerFunc) {
+
+	e.Method("PUT", path, c)
+}
+
+func (e *Engine) Delete(path string, c http.HandlerFunc) {
+	e.Method("DELETE", path, c)
+}
+
+func reportToSentry(error interface{}) {
+	// write code here to report error to Sentry
+	panic(error)
 }
