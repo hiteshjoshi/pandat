@@ -1,0 +1,89 @@
+{
+	"ImportPath": "github.com/hiteshjoshi/pandat",
+	"GoVersion": "go1.7",
+	"GodepVersion": "v75",
+	"Deps": [
+		{
+			"ImportPath": "github.com/Sirupsen/logrus",
+			"Comment": "v0.11.0-10-ga437dfd",
+			"Rev": "a437dfd2463eaedbec3dfe443e477d3b0a810b3f"
+		},
+		{
+			"ImportPath": "github.com/fatih/color",
+			"Comment": "v1.1.0-6-g9ab0325",
+			"Rev": "9ab0325f4904aac7c2c60db3cff3b35f415575c7"
+		},
+		{
+			"ImportPath": "github.com/gorilla/handlers",
+			"Comment": "v1.1-14-g3a5767c",
+			"Rev": "3a5767ca75ece5f7f1440b1d16975247f8d8b221"
+		},
+		{
+			"ImportPath": "github.com/gorilla/mux",
+			"Comment": "v1.1-27-g757bef9",
+			"Rev": "757bef944d0f21880861c2dd9c871ca543023cba"
+		},
+		{
+			"ImportPath": "github.com/hiteshjoshi/manners",
+			"Comment": "0.4.0-15-g82a8879",
+			"Rev": "82a8879fc5fd0381fa8b2d8033b19bf255252088"
+		},
+		{
+			"ImportPath": "github.com/hiteshjoshi/negroni",
+			"Comment": "v0.2.0-93-gb22de61",
+			"Rev": "b22de618d74f4b498625aad956191483343ed628"
+		},
+		{
+			"ImportPath": "github.com/mattn/go-colorable",
+			"Comment": "v0.0.6-9-gd228849",
+			"Rev": "d228849504861217f796da67fae4f6e347643f15"
+		},
+		{
+			"ImportPath": "github.com/mattn/go-isatty",
+			"Rev": "30a891c33c7cde7b02a981314b4228ec99380cca"
+		},
+		{
+			"ImportPath": "golang.org/x/sys/unix",
+			"Rev": "30237cf4eefd639b184d1f2cb77a581ea0be8947"
+		},
+		{
+			"ImportPath": "gopkg.in/hiteshjoshi/cron.v2",
+			"Comment": "v1-13-g9e0022d",
+			"Rev": "9e0022d5cc444d37045269ac864e534ec598cd77"
+		},
+		{
+			"ImportPath": "gopkg.in/redis.v5",
+			"Comment": "v5.2.0",
+			"Rev": "b9cc17bae020d9c1f467ca0f27d7706c1683c370"
+		},
+		{
+			"ImportPath": "gopkg.in/redis.v5/internal",
+			"Comment": "v5.2.0",
+			"Rev": "b9cc17bae020d9c1f467ca0f27d7706c1683c370"
+		},
+		{
+			"ImportPath": "gopkg.in/redis.v5/internal/consistenthash",
+			"Comment": "v5.2.0",
+			"Rev": "b9cc17bae020d9c1f467ca0f27d7706c1683c370"
+		},
+		{
+			"ImportPath": "gopkg.in/redis.v5/internal/hashtag",
+			"Comment": "v5.2.0",
+			"Rev": "b9cc17bae020d9c1f467ca0f27d7706c1683c370"
+		},
+		{
+			"ImportPath": "gopkg.in/redis.v5/internal/pool",
+			"Comment": "v5.2.0",
+			"Rev": "b9cc17bae020d9c1f467ca0f27d7706c1683c370"
+		},
+		{
+			"ImportPath": "gopkg.in/redis.v5/internal/proto",
+			"Comment": "v5.2.0",
+			"Rev": "b9cc17bae020d9c1f467ca0f27d7706c1683c370"
+		},
+		{
+			"ImportPath": "gopkg.in/validator.v2",
+			"Rev": "0a9835d809fb647a62611d30cb792e0b5dd65b11"
+		}
+	]
+}
