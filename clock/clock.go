@@ -23,6 +23,7 @@ const (
 
 type fn func() string
 type Clock struct {
+	ID    uint16
 	Cron  *Cron
 	Boot  fn
 	Redis *redis.Client
@@ -34,24 +35,28 @@ func forever() {
 }
 func New() *Clock {
 
-	client := redis.NewClient(&redis.Options{
+	c := NewCron()
+
+	redisClient := redis.NewClient(&redis.Options{
 		Addr: os.Getenv("REDIS"),
 	})
-	pong, err := client.Ping().Result()
+	pong, err := redisClient.Ping().Result()
 
 	fmt.Println("PING TO REDIS, GOT : ", pong, "and ERRORS : ", err)
 
-	c := NewCron()
-
-	e := client.Get("entries")
-	s, _ := e.Bytes()
-	id, _ := strconv.Atoi(string(s))
-	c.NextID = EntryID(id)
-
+	//CLOCK SERVER ENTRIES
+	clockID, _ := redisClient.Incr("clock_servers").Result()
+	fmt.Println("CLock ID ", clockID)
 	clock := Clock{
 		Cron:  c,
-		Redis: client,
+		Redis: redisClient,
+		ID:    uint16(clockID),
 	}
+
+	//CRON Entries
+	entries, _ := redisClient.Get("entries").Result()
+	id, _ := strconv.Atoi(entries)
+	c.NextID = EntryID(id)
 
 	//To make it run forever for slaves of clock
 	clock.Boot = func() string {
@@ -66,6 +71,12 @@ func New() *Clock {
 	return &clock
 }
 
+func (c *Clock) Stop() error {
+	_, err := c.Redis.IncrBy("clock_servers", -1).Result()
+	//fmt.Println(i, err)
+	return err
+}
+
 //Add : Add new job
 func (c *Clock) Add(interval string, url string) string {
 
@@ -76,10 +87,10 @@ func (c *Clock) Add(interval string, url string) string {
 	ID := fmt.Sprint(id)
 
 	//save interval
-	c.Redis.HSet("id:"+ID, "interval", interval)
+	c.Redis.HSet("id:"+string(c.ID), "interval", interval)
 
 	//save url
-	c.Redis.HSet("id:"+ID, "url", url)
+	c.Redis.HSet("id:"+string(c.ID), "url", url)
 
 	c.Redis.Set("entries", ID, 0)
 
@@ -99,6 +110,10 @@ func (c *Clock) Remove(id string) error {
 
 	return e.Err()
 
+}
+
+func (c *Clock) GetAll() {
+	//c.Redis.HGetAll
 }
 
 //This function controls what to run on cron execution

@@ -66,6 +66,17 @@ func (e *Engine) Run(port string) {
 			fmt.Println("\n\n\nPlease wait....")
 			fmt.Println("\nStopping API server!")
 			e.Server.Close()
+
+			fmt.Println("\nStopping Clock server!")
+
+			if e.Clock.Stop() != nil {
+				fmt.Println("\nFailed to remove clock server from redis!")
+				fmt.Println("\nClock server id : ", e.Clock.ID)
+
+			} else {
+				fmt.Println("\nStopped Clock server!")
+			}
+
 			os.Exit(0)
 		}
 	}()

@@ -13,6 +13,16 @@ type EventController struct {
 	Clock *clock.Clock
 }
 
+func (E *EventController) Get(w http.ResponseWriter, r *http.Request) {
+
+	resp := Response{
+		Message: "Events attached.",
+		Data:    map[string]string{},
+		Error:   false,
+	}
+	resp.Send(http.StatusOK, w)
+}
+
 func (E *EventController) Add(w http.ResponseWriter, r *http.Request) {
 
 	schedule := Schedular{}
