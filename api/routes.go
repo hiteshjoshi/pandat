@@ -19,6 +19,7 @@ func (E *Engine) Routes() {
 
 	events := E.Group("/events")
 	{
+		events.Get("/", eventController.Get)
 		events.Post("/", eventController.Add)
 		events.Post("/{eventID}", eventController.Remove)
 	}

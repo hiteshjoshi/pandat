@@ -81,16 +81,25 @@ func (c *Clock) Stop() error {
 func (c *Clock) Add(interval string, url string) string {
 
 	id, _ := c.Cron.AddJob(interval, Request{
-		URL: url,
+		URL:     url,
+		Redis:   c.Redis,
+		ClockID: c.ID,
 	})
 
 	ID := fmt.Sprint(id)
 
-	//save interval
-	c.Redis.HSet("id:"+string(c.ID), "interval", interval)
+	command := fmt.Sprint("cron:", c.ID, "::entry::", ID)
 
+	//save entryID
+	c.Redis.HSet(command, "id", ID)
+	//save interval
+	c.Redis.HSet(command, "interval", interval)
 	//save url
-	c.Redis.HSet("id:"+string(c.ID), "url", url)
+	c.Redis.HSet(command, "url", url)
+	//empty last run
+	c.Redis.HSet(command, "last_run", "")
+	//when did we create this one?
+	c.Redis.HSet(command, "created", time.Now().String())
 
 	c.Redis.Set("entries", ID, 0)
 
@@ -112,13 +121,61 @@ func (c *Clock) Remove(id string) error {
 
 }
 
-func (c *Clock) GetAll() {
-	//c.Redis.HGetAll
+func (c *Clock) GetAll() ([]map[EntryID]string, error) {
+
+	entries, err := c.
+		Redis.
+		Keys("cron:" + fmt.Sprint(c.ID, "*")).Result()
+
+	if err == nil {
+		var clockEntries []map[EntryID]string
+
+		for _, key := range entries {
+			fmt.Println(key)
+			// entryDetail, _ := c.
+			// 	Redis.
+			// 	HGetAll(key).
+			// 	Result()
+
+			// clockEntries = append(clockEntries, interface{
+			// 	"id":entryDetail["id"],
+			// })
+		}
+		return clockEntries, nil
+	}
+
+	return nil, err
+}
+
+func (c *Clock) GetAllString() ([]map[string]string, error) {
+	entries, err := c.
+		Redis.
+		Keys("cron:" + fmt.Sprint(c.ID, "*")).Result()
+
+	if err == nil {
+		var clockEntries []map[string]string
+
+		for _, key := range entries {
+
+			entryDetail, _ := c.
+				Redis.
+				HGetAll(key).
+				Result()
+
+			clockEntries = append(clockEntries, entryDetail)
+		}
+		return clockEntries, nil
+	}
+
+	return nil, err
 }
 
 //This function controls what to run on cron execution
 type Request struct {
-	URL string
+	URL     string
+	Redis   *redis.Client
+	ClockID uint16
+	EntryID string
 }
 
 func (d Request) Exec(ch chan<- string) {
@@ -150,6 +207,10 @@ func (d Request) Exec(ch chan<- string) {
 	log.Printf((d.URL)+" %s", resp.Status)
 
 	secs := time.Since(start).Seconds()
+
+	command := fmt.Sprint("cron:", d.ClockID, "::entry::", d.EntryID)
+
+	d.Redis.HSet(command, "last_run", time.Now().String())
 
 	ch <- fmt.Sprintf("%.2f elapsed with response length: %d %s", secs, d.URL)
 

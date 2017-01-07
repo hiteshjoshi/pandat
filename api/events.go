@@ -15,12 +15,23 @@ type EventController struct {
 
 func (E *EventController) Get(w http.ResponseWriter, r *http.Request) {
 
-	resp := Response{
-		Message: "Events attached.",
-		Data:    map[string]string{},
-		Error:   false,
+	entries, err := E.Clock.GetAll()
+
+	if err == nil {
+		resp := Response{
+			Message: "Events attached.",
+			Data:    entries,
+			Error:   false,
+		}
+		resp.Send(http.StatusOK, w)
+	} else {
+		resp := Response{
+			Message: "Cannot connect to redis right now.",
+			Error:   false,
+		}
+		resp.Send(http.StatusOK, w)
 	}
-	resp.Send(http.StatusOK, w)
+
 }
 
 func (E *EventController) Add(w http.ResponseWriter, r *http.Request) {

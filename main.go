@@ -8,6 +8,5 @@ import (
 func main() {
 
 	c := clock.New()
-
 	api.Start("9090", c)
 }

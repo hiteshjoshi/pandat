@@ -95,10 +95,8 @@ func (e *Engine) Group(path string) *Engine {
 	return ne
 }
 func (e *Engine) Method(m string, path string, c http.HandlerFunc) {
-	e.Router.
-		Methods(m).
-		Path(path).
-		Handler(c)
+
+	e.Router.HandleFunc(path, c).Methods(m)
 }
 func (e *Engine) Get(path string, c http.HandlerFunc) {
 
