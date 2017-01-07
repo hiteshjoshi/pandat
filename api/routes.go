@@ -14,6 +14,9 @@ func (E *Engine) Routes() {
 
 	E.Get("/", Index)
 
+	//for realtime analytics
+	E.WS("/ws", E.pubsub)
+
 	events := E.Group("/events")
 	{
 		events.Post("/", eventController.Add)

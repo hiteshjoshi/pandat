@@ -94,6 +94,13 @@ func (e *Engine) Get(path string, c http.HandlerFunc) {
 	e.Method("GET", path, c)
 }
 
+func (e *Engine) WS(path string, c http.HandlerFunc) {
+
+	e.Router.
+		Path(path).
+		Handler(c)
+}
+
 func (e *Engine) Post(path string, c http.HandlerFunc) {
 
 	e.Method("POST", path, c)

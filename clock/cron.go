@@ -10,6 +10,8 @@ import (
 
 	"strconv"
 
+	"os"
+
 	cron "gopkg.in/hiteshjoshi/cron.v2"
 	"gopkg.in/redis.v5"
 )
@@ -34,7 +36,7 @@ func forever() {
 func New() *Clock {
 
 	client := redis.NewClient(&redis.Options{
-		Addr: "localhost:6379",
+		Addr: os.Getenv("REDIS"),
 	})
 	pong, err := client.Ping().Result()
 
