@@ -92,14 +92,12 @@ func (d Job) Request(ch chan<- string) {
 	defer resp.Body.Close()
 
 	if err != nil {
+		//TODO create an error for this event
 		log.Print("Unable to create a new http request", err)
 	}
 
-	if err != nil {
-		log.Println("error POSTing example.com", err)
-	}
-
-	log.Printf("example.com %s", resp.Status)
+	//save status in db
+	log.Printf((d.URL)+" %s", resp.Status)
 
 	secs := time.Since(start).Seconds()
 
