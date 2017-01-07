@@ -2,6 +2,9 @@
 	"ImportPath": "github.com/hiteshjoshi/pandat",
 	"GoVersion": "go1.7",
 	"GodepVersion": "v75",
+	"Packages": [
+		"."
+	],
 	"Deps": [
 		{
 			"ImportPath": "github.com/Sirupsen/logrus",
@@ -22,6 +25,11 @@
 			"ImportPath": "github.com/gorilla/mux",
 			"Comment": "v1.1-27-g757bef9",
 			"Rev": "757bef944d0f21880861c2dd9c871ca543023cba"
+		},
+		{
+			"ImportPath": "github.com/gorilla/websocket",
+			"Comment": "v1.0.0-34-g2aff870",
+			"Rev": "2aff870ef83507abb46472eae82449f7a4c464c5"
 		},
 		{
 			"ImportPath": "github.com/hiteshjoshi/manners",
@@ -45,11 +53,6 @@
 		{
 			"ImportPath": "golang.org/x/sys/unix",
 			"Rev": "30237cf4eefd639b184d1f2cb77a581ea0be8947"
-		},
-		{
-			"ImportPath": "gopkg.in/hiteshjoshi/cron.v2",
-			"Comment": "v1-13-g9e0022d",
-			"Rev": "9e0022d5cc444d37045269ac864e534ec598cd77"
 		},
 		{
 			"ImportPath": "gopkg.in/redis.v5",
