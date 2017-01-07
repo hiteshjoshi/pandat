@@ -29,24 +29,39 @@ type Clock struct {
 	Redis *redis.Client
 }
 
-func forever() {
+func NewRedisClient() *redis.Client {
+	return redis.NewClient(&redis.Options{
+		Addr:     os.Getenv("REDIS"),
+		PoolSize: 100,
+	})
+}
+
+func (c *Clock) forever() {
 	for {
+		_, err := c.Redis.Ping().Result()
+
+		//fmt.Println("PING TO REDIS, GOT : ", pong, "and ERRORS : ", err)
+		if err != nil {
+			c.Redis = NewRedisClient()
+		}
+		time.Sleep(time.Second * 5)
 	}
 }
 func New() *Clock {
 
 	c := NewCron()
 
-	redisClient := redis.NewClient(&redis.Options{
-		Addr: os.Getenv("REDIS"),
-	})
+	redisClient := NewRedisClient()
+
 	pong, err := redisClient.Ping().Result()
 
 	fmt.Println("PING TO REDIS, GOT : ", pong, "and ERRORS : ", err)
 
 	//CLOCK SERVER ENTRIES
-	clockID, _ := redisClient.Incr("clock_servers").Result()
+	clockID, _ := redisClient.Incr("clocks").Result()
+
 	fmt.Println("CLock ID ", clockID)
+
 	clock := Clock{
 		Cron:  c,
 		Redis: redisClient,
@@ -61,7 +76,7 @@ func New() *Clock {
 	//To make it run forever for slaves of clock
 	clock.Boot = func() string {
 		done := make(chan bool)
-		go forever()
+		go clock.forever()
 		<-done
 		return ""
 	}
@@ -72,8 +87,8 @@ func New() *Clock {
 }
 
 func (c *Clock) Stop() error {
-	_, err := c.Redis.IncrBy("clock_servers", -1).Result()
-	//fmt.Println(i, err)
+	_, err := c.Redis.IncrBy("clocks", -1).Result()
+	c.Redis.Close()
 	return err
 }
 
@@ -202,7 +217,6 @@ func (d Request) Exec(ch chan<- string) {
 		//TODO create an error for this event
 		log.Print("Unable to create a new http request", err)
 	}
-
 	//save status in db
 	log.Printf((d.URL)+" %s", resp.Status)
 
@@ -211,6 +225,10 @@ func (d Request) Exec(ch chan<- string) {
 	command := fmt.Sprint("cron:", d.ClockID, "::entry::", d.EntryID)
 
 	d.Redis.HSet(command, "last_run", time.Now().String())
+
+	d.Redis.HSet(command, "last_meta", map[string]string{
+		"time": fmt.Sprint(secs),
+	})
 
 	ch <- fmt.Sprintf("%.2f elapsed with response length: %d %s", secs, d.URL)
 
