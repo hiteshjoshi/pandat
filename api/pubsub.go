@@ -36,7 +36,7 @@ func (E *Engine) pubsub(w http.ResponseWriter, r *http.Request) {
 
 	for {
 		mt, message, err := conn.ReadMessage()
-
+		//fmt.Fprintln()
 		if string(message) == "subscribe" {
 
 			E.NewSubscriber("events", func(channel string, payload string) {
@@ -56,7 +56,7 @@ func (E *Engine) pubsub(w http.ResponseWriter, r *http.Request) {
 		// 	fmt.Println("read:", err)
 		// 	break
 		// }
-		//fmt.Printf("recv: %s\n", message)
+		fmt.Printf("recv: %s\n", message)
 		//err = conn.WriteMessage(mt, message)
 		if err != nil {
 			fmt.Println("Error:", err)
