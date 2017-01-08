@@ -10,5 +10,6 @@ ENV variables
 
 ## API
 - POST to /events to create new event
-    - BODY : {"url":"http://urltohit.com","interval":"0 30 * * * ","name":"some_event_ name"}
+    - BODY :`{"url":"http://urltohit.com","interval":"0 30 * * * ","name":"some_event_ name"}`
 - DELETE to /events/{eventID} to remove an event
+- GET /events to get all events
