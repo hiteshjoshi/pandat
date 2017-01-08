@@ -17,5 +17,6 @@ func (C *Clock) Publish(channel string, message interface{}) *redis.IntCmd {
 		panic(err)
 	}
 	messageString := string(jsonBytes)
+
 	return C.Redis.Publish(channel, messageString)
 }

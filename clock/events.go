@@ -7,18 +7,19 @@ import (
 )
 
 type Event struct {
-	Type    string
-	JobID   string
-	Message string
+	Type    string      `json:"type"`
+	JobID   string      `json:"job_id"`
+	Message string      `json:"message"`
+	Meta    interface{} `json:"meta"`
 }
 
 //Add : Add new job
 func (c *Clock) Add(interval string, url string) string {
 
 	id, _ := c.Cron.AddJob(interval, Request{
-		URL:     url,
-		Redis:   c.Redis,
-		ClockID: c.ID,
+		URL:   url,
+		Redis: c.Redis,
+		Clock: c,
 	})
 
 	ID := fmt.Sprint(id)

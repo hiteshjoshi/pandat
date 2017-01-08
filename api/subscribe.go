@@ -20,7 +20,9 @@ type processFunc func(string, string)
 func (E *Engine) NewSubscriber(channel string, fn processFunc) (*Subscriber, error) {
 	var err error
 	// TODO Timeout param?
+
 	ps, _ := E.Clock.Redis.PSubscribe(channel)
+
 	s := Subscriber{
 		pubsub:   ps,
 		channel:  channel,
@@ -28,7 +30,7 @@ func (E *Engine) NewSubscriber(channel string, fn processFunc) (*Subscriber, err
 	}
 
 	// Subscribe to the channel
-	err = s.subscribe()
+	//err = s.subscribe()
 	if err != nil {
 		return nil, err
 	}
@@ -37,17 +39,6 @@ func (E *Engine) NewSubscriber(channel string, fn processFunc) (*Subscriber, err
 	go s.listen()
 
 	return &s, nil
-}
-
-func (s *Subscriber) subscribe() error {
-	var err error
-
-	err = s.pubsub.Subscribe(s.channel)
-	if err != nil {
-		log.Println("Error subscribing to channel.")
-		return err
-	}
-	return nil
 }
 
 func (s *Subscriber) listen() error {

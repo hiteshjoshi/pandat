@@ -13,13 +13,19 @@ import (
 
 //This function controls what to run on cron execution
 type Request struct {
-	URL     string
-	Redis   *redis.Client
-	ClockID uint16
-	EntryID string
+	URL   string
+	Redis *redis.Client
+	Clock *Clock
 }
 
-func (d Request) Exec(ch chan<- string) {
+func (d Request) Exec(ch chan<- string, ID EntryID) {
+
+	d.Clock.Publish("events", &Event{
+		Type:    "started",
+		JobID:   fmt.Sprint(ID),
+		Message: "Job started",
+	})
+
 	start := time.Now()
 
 	var netTransport = &http.Transport{
@@ -44,22 +50,31 @@ func (d Request) Exec(ch chan<- string) {
 		log.Print("Unable to create a new http request", err)
 	}
 	//save status in db
-	log.Printf((d.URL)+" %s", resp.Status)
+	log.Printf((d.URL)+" %s", resp.Status, resp.Header)
 
 	secs := time.Since(start).Seconds()
 
-	command := fmt.Sprint("cron:", d.ClockID, "::entry::", d.EntryID)
+	command := fmt.Sprint("cron:", d.Clock.ID, "::entry::", ID)
 
 	d.Redis.HSet(command, "last_run", time.Now().String())
 
 	d.Redis.HSet(command, "last_meta", map[string]string{
 		"time": fmt.Sprint(secs),
 	})
-
+	//Pub events to redis
+	d.Clock.Publish("events", &Event{
+		Type:    "finished",
+		JobID:   fmt.Sprint(ID),
+		Message: "Job Finished",
+		Meta: map[string]string{
+			"total_time":  fmt.Sprint(secs),
+			"http_status": resp.Status,
+		},
+	})
 	ch <- fmt.Sprintf("%.2f elapsed with response length: %d %s", secs, d.URL)
 
 }
-func (d Request) Run() {
+func (d Request) Run(ID EntryID) {
 	ch := make(chan string)
-	go d.Exec(ch)
+	go d.Exec(ch, ID)
 }
