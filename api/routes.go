@@ -17,11 +17,11 @@ func (E *Engine) Routes() {
 	//for realtime analytics
 	E.WS("/ws", E.pubsub)
 
-	events := E.Group("/events")
+	events := E.Group("/events/")
 	{
 		events.Get("/", eventController.Get)
 		events.Post("/", eventController.Add)
-		events.Post("/{eventID}", eventController.Remove)
+		events.Post("/{eventID}/", eventController.Remove)
 	}
 }
 

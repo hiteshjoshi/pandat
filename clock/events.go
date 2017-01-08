@@ -6,6 +6,12 @@ import (
 	"time"
 )
 
+type Event struct {
+	Type    string
+	JobID   string
+	Message string
+}
+
 //Add : Add new job
 func (c *Clock) Add(interval string, url string) string {
 
@@ -31,6 +37,13 @@ func (c *Clock) Add(interval string, url string) string {
 	c.Redis.HSet(command, "created", time.Now().String())
 
 	c.Redis.Set("entries", ID, 0)
+
+	//Publish to events
+	c.Publish("events", &Event{
+		Type:    "added",
+		JobID:   ID,
+		Message: "New job added",
+	})
 
 	return ID
 

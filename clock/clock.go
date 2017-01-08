@@ -42,6 +42,7 @@ func (c *Clock) forever() {
 		time.Sleep(time.Second * 5)
 	}
 }
+
 func New() *Clock {
 
 	c := NewCron()
