@@ -50,7 +50,7 @@ func (d Request) Exec(ch chan<- string, ID EntryID) {
 		log.Print("Unable to create a new http request", err)
 	}
 	//save status in db
-	log.Printf((d.URL)+" %s", resp.Status)
+	log.Printf((d.URL)+" %s", resp.Status, resp.Header)
 
 	secs := time.Since(start).Seconds()
 
@@ -61,13 +61,14 @@ func (d Request) Exec(ch chan<- string, ID EntryID) {
 	d.Redis.HSet(command, "last_meta", map[string]string{
 		"time": fmt.Sprint(secs),
 	})
-
+	//Pub events to redis
 	d.Clock.Publish("events", &Event{
 		Type:    "finished",
 		JobID:   fmt.Sprint(ID),
 		Message: "Job Finished",
 		Meta: map[string]string{
-			"total_time": fmt.Sprint(secs),
+			"total_time":  fmt.Sprint(secs),
+			"http_status": resp.Status,
 		},
 	})
 	ch <- fmt.Sprintf("%.2f elapsed with response length: %d %s", secs, d.URL)
